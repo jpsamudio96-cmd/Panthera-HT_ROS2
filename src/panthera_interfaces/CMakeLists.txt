@@ -15,6 +15,8 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "msg/ArmStatus.msg"
   "msg/EndPoseEuler.msg"
   "msg/PosCmd.msg"
+  "msg/DetectedObject.msg"
+  
   "srv/MoveToJoint.srv"
   "srv/MoveToPose.srv"
   "srv/GripperControl.srv"
