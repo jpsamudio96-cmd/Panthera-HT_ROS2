@@ -221,7 +221,9 @@ class VisionBridge(Node):
 
                 return False
 
-        if packet["protocol_version"] != 1:
+        SUPPORTED_PROTOCOL = 2
+
+        if packet["protocol_version"] != SUPPORTED_PROTOCOL:
 
             self.get_logger().warning(
                 "Versión de protocolo no soportada"
@@ -246,21 +248,15 @@ class VisionBridge(Node):
     def validate_detection(self, detection):
 
         required_fields = [
-
             "class_name",
-
             "confidence",
-
-            "x",
-
-            "y",
-
-            "z",
-
+            "centroid",
+            "theta",
+            "bounding_box",
             "frame_id"
-
         ]
 
+        # Validar campos principales
         for field in required_fields:
 
             if field not in detection:
@@ -271,7 +267,39 @@ class VisionBridge(Node):
 
                 return False
 
+        # Validar centroid
+        centroid = detection["centroid"]
+
+        if "u" not in centroid or "v" not in centroid:
+
+            self.get_logger().warning(
+                "Detection missing centroid coordinates."
+            )
+
+            return False
+
+        # Validar bounding box
+        bbox = detection["bounding_box"]
+
+        required_bbox = [
+            "x",
+            "y",
+            "width",
+            "height"
+        ]
+
+        for field in required_bbox:
+
+            if field not in bbox:
+
+                self.get_logger().warning(
+                    f"Bounding box missing field: {field}"
+                )
+
+                return False
+
         return True
+
 
  # JSON
     # Parsear el paquete JSON
@@ -304,19 +332,36 @@ class VisionBridge(Node):
                 "------ Detección ------"
             )
 
+            #Clase
             self.get_logger().info(
                 f"Clase      : {detection['class_name']}"
             )
 
+            #Confianza
             self.get_logger().info(
                 f"Confianza  : {detection['confidence']:.2f}"
             )
 
+            #Centroide
             self.get_logger().info(
-                f"Posición   : "
-                f"({detection['x']:.2f}, "
-                f"{detection['y']:.2f}, "
-                f"{detection['z']:.2f})"
+                f"Centroide  : "
+                f"({detection['centroid']['u']}, "
+                f"{detection['centroid']['v']})"
+            )
+
+            #Ángulo
+            self.get_logger().info(
+                f"Theta      : "
+                f"{detection['theta']:.2f}°"
+            )
+
+            #Bounding Box
+            self.get_logger().info(
+                f"BBox       : "
+                f"({detection['bounding_box']['x']}, "
+                f"{detection['bounding_box']['y']}, "
+                f"{detection['bounding_box']['width']}, "
+                f"{detection['bounding_box']['height']})"
             )
 
             self.get_logger().info(
@@ -329,25 +374,57 @@ class VisionBridge(Node):
 
         msg = DetectedObject()
 
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = detection["frame_id"]
+
         msg.class_name = detection["class_name"]
 
         msg.confidence = float(
             detection["confidence"]
         )
 
-        msg.x = float(
-            detection["x"]
+        msg.centroid_u = int(
+            detection["centroid"]["u"]
         )
 
-        msg.y = float(
-            detection["y"]
+        msg.centroid_v = int(
+            detection["centroid"]["v"]
         )
 
-        msg.z = float(
-            detection["z"]
+        msg.theta = float(
+            detection["theta"]
         )
 
-        msg.frame_id = detection["frame_id"]
+        bbox = detection["bounding_box"]
+
+        msg.bbox_x = int(
+            bbox["x"]
+        )
+
+        msg.bbox_y = int(
+            bbox["y"]
+        )
+
+        msg.bbox_width = int(
+            bbox["width"]
+        )
+
+        msg.bbox_height = int(
+            bbox["height"]
+        )
+
+
+        msg.workspace_x = float(
+            detection["workspace"]["x"]
+        )
+
+        msg.workspace_y = float(
+            detection["workspace"]["y"]
+        )
+
+        msg.workspace_z = float(
+            detection["workspace"]["z"]
+        )
 
         return msg
 
@@ -365,8 +442,7 @@ class VisionBridge(Node):
 
             f"({msg.confidence:.2f}) "
 
-            f"[{msg.frame_id}]"
-
+            f"[{msg.header.frame_id}]"
         )
 
 # CLEANUP
