@@ -5,8 +5,9 @@
 
 #include <rclcpp/rclcpp.hpp>
 
-#include "panthera_interfaces/msg/detected_object.hpp"
 #include "moveit/move_group_interface/move_group_interface.h"
+
+#include "panthera_interfaces/msg/detected_object.hpp"
 
 class MoveItAdapterNode : public rclcpp::Node
 {

@@ -27,13 +27,18 @@ MoveItAdapterNode::MoveItAdapterNode()
 
 void MoveItAdapterNode::initializeMoveIt()
 {
+    if (arm_)
+    {
+        return;
+    }
+
     arm_ = std::make_shared<MoveGroupInterface>(
         shared_from_this(),
         "arm"
     );
 
-    arm_->setMaxVelocityScalingFactor(1.0);
-    arm_->setMaxAccelerationScalingFactor(1.0);
+    arm_->setMaxVelocityScalingFactor(0.3);
+    arm_->setMaxAccelerationScalingFactor(0.3);
 
     RCLCPP_INFO(
         get_logger(),
@@ -45,7 +50,7 @@ void MoveItAdapterNode::executeCupRoutine()
 {
     RCLCPP_INFO(
         get_logger(),
-        "Executing CUP routine..."
+        "Cup routine not implemented yet."
     );
 }
 
@@ -53,6 +58,11 @@ void MoveItAdapterNode::detectedObjectCallback(
     const panthera_interfaces::msg::DetectedObject::SharedPtr msg
 )
 {
+    if (!arm_)
+    {
+        initializeMoveIt();
+    }
+
     if (robot_busy_)
     {
         return;
@@ -60,47 +70,10 @@ void MoveItAdapterNode::detectedObjectCallback(
 
     robot_busy_ = true;
 
-    if (!arm_)
-    {
-        initializeMoveIt();
-    }
-
     RCLCPP_INFO(
         get_logger(),
-        "Detected object received."
-    );
-
-    RCLCPP_INFO(
-        get_logger(),
-        "Class: %s",
+        "Detected: %s",
         msg->class_name.c_str()
-    );
-
-    RCLCPP_INFO(
-        get_logger(),
-        "Confidence: %.2f",
-        msg->confidence
-    );
-
-    RCLCPP_INFO(
-        get_logger(),
-        "Workspace Position: [%.3f, %.3f, %.3f]",
-        msg->workspace_x,
-        msg->workspace_y,
-        msg->workspace_z
-    );
-
-    RCLCPP_INFO(
-        get_logger(),
-        "Centroid: (%u, %u)",
-        msg->centroid_u,
-        msg->centroid_v
-    );
-
-    RCLCPP_INFO(
-        get_logger(),
-        "Theta: %.2f deg",
-        msg->theta
     );
 
     if (msg->class_name == "cup")
