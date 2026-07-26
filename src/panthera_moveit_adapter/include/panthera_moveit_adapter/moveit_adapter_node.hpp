@@ -21,6 +21,10 @@ private:
 
     void initializeMoveIt();
 
+    bool executeNamedTarget(
+        const std::string& target_name
+    );
+
     void executeCupRoutine();
 
     void detectedObjectCallback(
@@ -34,6 +38,8 @@ private:
     >::SharedPtr detected_object_subscription_;
 
     bool robot_busy_;
+
+    bool cup_detected_;
 };
 
 #endif

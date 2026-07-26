@@ -4,7 +4,8 @@
 
 MoveItAdapterNode::MoveItAdapterNode()
     : Node("panthera_moveit_adapter"),
-      robot_busy_(false)
+        robot_busy_(false),
+        cup_detected_(false)
 {
     detected_object_subscription_ =
         this->create_subscription<
@@ -46,6 +47,55 @@ void MoveItAdapterNode::initializeMoveIt()
     );
 }
 
+bool MoveItAdapterNode::executeNamedTarget(
+    const std::string& target_name
+)
+{
+    arm_->setStartStateToCurrentState();
+
+    arm_->setNamedTarget(target_name);
+
+    MoveGroupInterface::Plan plan;
+
+    auto result = arm_->plan(plan);
+
+    if (result != moveit::core::MoveItErrorCode::SUCCESS)
+    {
+        RCLCPP_ERROR(
+            get_logger(),
+            "Planning failed for target '%s'.",
+            target_name.c_str()
+        );
+        return false;
+    }
+
+    RCLCPP_INFO(
+        get_logger(),
+        "Executing '%s'...",
+        target_name.c_str()
+    );
+
+    result = arm_->execute(plan);
+
+    if (result != moveit::core::MoveItErrorCode::SUCCESS)
+    {
+        RCLCPP_ERROR(
+            get_logger(),
+            "Execution failed for target '%s'.",
+            target_name.c_str()
+        );
+        return false;
+    }
+
+    RCLCPP_INFO(
+        get_logger(),
+        "Target '%s' completed.",
+        target_name.c_str()
+    );
+
+    return true;
+}
+
 void MoveItAdapterNode::executeCupRoutine()
 {
     if (!arm_)
@@ -57,49 +107,16 @@ void MoveItAdapterNode::executeCupRoutine()
         return;
     }
 
-    RCLCPP_INFO(
-        get_logger(),
-        "Planning to named target: pose1"
-    );
-
-    arm_->setStartStateToCurrentState();
-
-    arm_->setNamedTarget("pose1");
-
-    MoveGroupInterface::Plan plan;
-
-    auto result = arm_->plan(plan);
-
-    if (result != moveit::core::MoveItErrorCode::SUCCESS)
+    if (!executeNamedTarget("pose1"))
     {
-        RCLCPP_ERROR(
-            get_logger(),
-            "Planning failed."
-        );
         return;
     }
 
-    RCLCPP_INFO(
-        get_logger(),
-        "Planning succeeded."
+    rclcpp::sleep_for(
+        std::chrono::seconds(1)
     );
 
-    result = arm_->execute(plan);
-
-    if (result == moveit::core::MoveItErrorCode::SUCCESS)
-    {
-        RCLCPP_INFO(
-            get_logger(),
-            "Execution completed."
-        );
-    }
-    else
-    {
-        RCLCPP_ERROR(
-            get_logger(),
-            "Execution failed."
-        );
-    }
+    executeNamedTarget("home");
 }
 
 void MoveItAdapterNode::detectedObjectCallback(
@@ -116,19 +133,31 @@ void MoveItAdapterNode::detectedObjectCallback(
         return;
     }
 
+    // Si deja de verse una taza,
+    // el sistema queda listo para un nuevo disparo.
     if (msg->class_name != "cup")
+    {
+        cup_detected_ = false;
+        return;
+    }
+
+    // La taza sigue siendo la misma.
+    if (cup_detected_)
     {
         return;
     }
+
+    cup_detected_ = true;
 
     robot_busy_ = true;
 
     RCLCPP_INFO(
         get_logger(),
-        "Detected cup."
+        "New cup detected."
     );
 
     executeCupRoutine();
 
     robot_busy_ = false;
 }
+
