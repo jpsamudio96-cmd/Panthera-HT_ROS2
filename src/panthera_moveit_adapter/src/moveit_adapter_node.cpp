@@ -1,11 +1,14 @@
 #include "panthera_moveit_adapter/moveit_adapter_node.hpp"
 
+#include <chrono>
 #include <functional>
+
+using namespace std::chrono_literals;
 
 MoveItAdapterNode::MoveItAdapterNode()
     : Node("panthera_moveit_adapter"),
-        robot_busy_(false),
-        cup_detected_(false)
+      robot_busy_(false),
+      last_processed_object_("")
 {
     detected_object_subscription_ =
         this->create_subscription<
@@ -51,6 +54,15 @@ bool MoveItAdapterNode::executeNamedTarget(
     const std::string& target_name
 )
 {
+    if (!arm_)
+    {
+        RCLCPP_ERROR(
+            get_logger(),
+            "MoveGroupInterface not initialized."
+        );
+        return false;
+    }
+
     arm_->setStartStateToCurrentState();
 
     arm_->setNamedTarget(target_name);
@@ -93,30 +105,68 @@ bool MoveItAdapterNode::executeNamedTarget(
         target_name.c_str()
     );
 
+    last_processed_object_.clear();
+
     return true;
 }
 
 void MoveItAdapterNode::executeCupRoutine()
 {
-    if (!arm_)
-    {
-        RCLCPP_ERROR(
-            get_logger(),
-            "MoveGroupInterface not initialized."
-        );
-        return;
-    }
-
     if (!executeNamedTarget("pose1"))
     {
+        robot_busy_ = false;
         return;
     }
 
-    rclcpp::sleep_for(
-        std::chrono::seconds(1)
-    );
+    rclcpp::sleep_for(1s);
 
     executeNamedTarget("home");
+
+    last_processed_object_.clear();
+
+    robot_busy_ = false;
+}
+
+void MoveItAdapterNode::executeBottleRoutine()
+{
+    if (!executeNamedTarget("pose1"))
+    {
+        robot_busy_ = false;
+        return;
+    }
+
+    rclcpp::sleep_for(1s);
+
+    if (!executeNamedTarget("pose2"))
+    {
+        robot_busy_ = false;
+        return;
+    }
+
+    rclcpp::sleep_for(1s);
+
+    executeNamedTarget("home");
+
+    robot_busy_ = false;
+}
+
+bool MoveItAdapterNode::dispatchObject(
+    const std::string& object_name
+)
+{
+    if (object_name == "cup")
+    {
+        executeCupRoutine();
+        return true;
+    }
+
+    if (object_name == "bottle")
+    {
+        executeBottleRoutine();
+        return true;
+    }
+
+    return false;
 }
 
 void MoveItAdapterNode::detectedObjectCallback(
@@ -133,31 +183,31 @@ void MoveItAdapterNode::detectedObjectCallback(
         return;
     }
 
-    // Si deja de verse una taza,
-    // el sistema queda listo para un nuevo disparo.
-    if (msg->class_name != "cup")
-    {
-        cup_detected_ = false;
-        return;
-    }
+    const std::string object_name = msg->class_name;
 
-    // La taza sigue siendo la misma.
-    if (cup_detected_)
+    if (object_name == last_processed_object_)
     {
         return;
     }
 
-    cup_detected_ = true;
+    last_processed_object_ = object_name;
 
     robot_busy_ = true;
 
     RCLCPP_INFO(
         get_logger(),
-        "New cup detected."
+        "Detected object: %s",
+        object_name.c_str()
     );
 
-    executeCupRoutine();
+    if (!dispatchObject(object_name))
+    {
+        RCLCPP_WARN(
+            get_logger(),
+            "No routine implemented for '%s'.",
+            object_name.c_str()
+        );
 
-    robot_busy_ = false;
+        robot_busy_ = false;
+    }
 }
-
