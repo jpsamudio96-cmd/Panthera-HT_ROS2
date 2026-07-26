@@ -223,6 +223,14 @@ class VisionBridge(Node):
 
         SUPPORTED_PROTOCOL = 2
 
+        self.get_logger().info(
+            f"Received protocol_version = {packet.get('protocol_version')}"
+        )
+
+        self.get_logger().info(
+            f"Complete packet = {packet}"
+        )
+
         if packet["protocol_version"] != SUPPORTED_PROTOCOL:
 
             self.get_logger().warning(

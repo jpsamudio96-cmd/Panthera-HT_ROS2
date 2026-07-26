@@ -11,6 +11,7 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(panthera_interfaces REQUIRED)
 
 # =========================
 # Include directories
@@ -43,6 +44,7 @@ add_executable(
 ament_target_dependencies(
   moveit_adapter_node
   rclcpp
+  panthera_interfaces
 )
 
 # =========================
