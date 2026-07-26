@@ -22,6 +22,13 @@ ament_target_dependencies(test_moveit_by_cartesian rclcpp moveit_ros_planning_in
 add_executable(test_moveit_by_jointspace src/test_moveit_by_jointspace.cpp)
 ament_target_dependencies(test_moveit_by_jointspace rclcpp moveit_ros_planning_interface example_interfaces)
 
+add_executable(test_moveit_named_target src/test_moveit_named_target.cpp)
+ament_target_dependencies(
+    test_moveit_named_target
+    rclcpp
+    moveit_ros_planning_interface
+)
+
 add_executable(test_moveit_by_siyuanshu src/test_moveit_by_siyuanshu.cpp)
 ament_target_dependencies(test_moveit_by_siyuanshu rclcpp moveit_ros_planning_interface example_interfaces)
 
@@ -58,6 +65,7 @@ install(TARGETS
   test_moveit
   test_moveit_by_cartesian
   test_moveit_by_jointspace
+  test_moveit_named_target
   test_moveit_by_siyuanshu
   test_gripper
   test_gripper_detailed

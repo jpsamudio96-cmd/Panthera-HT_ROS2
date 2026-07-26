@@ -12,6 +12,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(panthera_interfaces REQUIRED)
+find_package(moveit_ros_planning_interface REQUIRED)
 
 # =========================
 # Include directories
@@ -23,8 +24,6 @@ include_directories(
 
 set(PANTHERA_MOVEIT_ADAPTER_HEADERS
     include/panthera_moveit_adapter/moveit_adapter_node.hpp
-    include/panthera_moveit_adapter/state_machine.hpp
-    include/panthera_moveit_adapter/trajectory_library.hpp
 )
 
 set(PANTHERA_MOVEIT_ADAPTER_SOURCES
@@ -45,6 +44,7 @@ ament_target_dependencies(
   moveit_adapter_node
   rclcpp
   panthera_interfaces
+  moveit_ros_planning_interface
 )
 
 # =========================
@@ -59,6 +59,11 @@ install(
 install(
   DIRECTORY include/
   DESTINATION include
+)
+
+install(
+  DIRECTORY launch
+  DESTINATION share/${PROJECT_NAME}
 )
 
 # =========================
