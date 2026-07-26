@@ -13,6 +13,17 @@ class TargetSelector(Node):
 
         super().__init__("target_selector")
 
+        self.last_class_name = None
+
+        self.last_detection_time = self.get_clock().now()
+
+        self.timeout = 2.0  # segundos
+
+        self.timer = self.create_timer(
+            0.1,
+            self.check_detection_timeout
+        )
+
         self.get_logger().info(
             "Target Selector iniciado."
         )
@@ -46,22 +57,41 @@ class TargetSelector(Node):
         self,
         msg
     ):
+        self.last_detection_time = self.get_clock().now()
 
-        # Guardar el objetivo actual
+        if msg.class_name == self.last_class_name:
+            return
+
+        self.last_class_name = msg.class_name
+
         self.current_target = msg
 
-        # Publicar el objetivo seleccionado
         self.publisher.publish(msg)
 
         self.get_logger().info(
-
             f"[TARGET] "
-
             f"{msg.class_name} "
-
             f"({msg.confidence:.2f})"
-
         )
+
+    def check_detection_timeout(self):
+
+        now = self.get_clock().now()
+
+        elapsed = (
+            now - self.last_detection_time
+        ).nanoseconds / 1e9
+
+        if (
+            self.last_class_name is not None
+            and elapsed > self.timeout
+        ):
+            self.get_logger().info(
+                "No detections. Rearming Target Selector."
+            )
+
+            self.last_class_name = None
+            self.current_target = None
 
 def main(args=None):
 

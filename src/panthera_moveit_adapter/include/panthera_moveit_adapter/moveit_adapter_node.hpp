@@ -27,6 +27,10 @@ private:
         const std::string& target_name
     );
 
+    bool executeGripperTarget(
+        const std::string& target_name
+    );
+
     bool dispatchObject(
         const std::string& object_name
     );
@@ -41,13 +45,13 @@ private:
 
     std::shared_ptr<MoveGroupInterface> arm_;
 
+    std::shared_ptr<MoveGroupInterface> gripper_;
+
     rclcpp::Subscription<
         panthera_interfaces::msg::DetectedObject
     >::SharedPtr detected_object_subscription_;
 
     bool robot_busy_;
-    std::string last_processed_object_;
-    std::chrono::steady_clock::time_point last_execution_;
 };
 
 #endif  // PANTHERA_MOVEIT_ADAPTER__MOVEIT_ADAPTER_NODE_HPP_

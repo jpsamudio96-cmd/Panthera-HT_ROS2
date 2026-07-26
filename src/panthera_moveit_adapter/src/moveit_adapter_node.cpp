@@ -7,8 +7,7 @@ using namespace std::chrono_literals;
 
 MoveItAdapterNode::MoveItAdapterNode()
     : Node("panthera_moveit_adapter"),
-      robot_busy_(false),
-      last_processed_object_("")
+      robot_busy_(false)
 {
     detected_object_subscription_ =
         this->create_subscription<
@@ -41,8 +40,16 @@ void MoveItAdapterNode::initializeMoveIt()
         "arm"
     );
 
+    gripper_ = std::make_shared<MoveGroupInterface>(
+        shared_from_this(),
+        "gripper"
+    );
+
     arm_->setMaxVelocityScalingFactor(0.30);
     arm_->setMaxAccelerationScalingFactor(0.30);
+
+    gripper_->setMaxVelocityScalingFactor(1.0);
+    gripper_->setMaxAccelerationScalingFactor(1.0);
 
     RCLCPP_INFO(
         get_logger(),
@@ -105,7 +112,53 @@ bool MoveItAdapterNode::executeNamedTarget(
         target_name.c_str()
     );
 
-    last_processed_object_.clear();
+
+
+    return true;
+}
+
+bool MoveItAdapterNode::executeGripperTarget(
+    const std::string& target_name
+)
+{
+    if (!gripper_)
+    {
+        RCLCPP_ERROR(
+            get_logger(),
+            "Gripper MoveGroupInterface not initialized."
+        );
+        return false;
+    }
+
+    gripper_->setStartStateToCurrentState();
+
+    gripper_->setNamedTarget(target_name);
+
+    MoveGroupInterface::Plan plan;
+
+    auto result = gripper_->plan(plan);
+
+    if (result != moveit::core::MoveItErrorCode::SUCCESS)
+    {
+        RCLCPP_ERROR(
+            get_logger(),
+            "Gripper planning failed for '%s'.",
+            target_name.c_str()
+        );
+        return false;
+    }
+
+    result = gripper_->execute(plan);
+
+    if (result != moveit::core::MoveItErrorCode::SUCCESS)
+    {
+        RCLCPP_ERROR(
+            get_logger(),
+            "Gripper execution failed for '%s'.",
+            target_name.c_str()
+        );
+        return false;
+    }
 
     return true;
 }
@@ -120,9 +173,9 @@ void MoveItAdapterNode::executeCupRoutine()
 
     rclcpp::sleep_for(1s);
 
-    executeNamedTarget("home");
+    executeGripperTarget("open");
 
-    last_processed_object_.clear();
+    executeNamedTarget("home");
 
     robot_busy_ = false;
 }
@@ -135,7 +188,7 @@ void MoveItAdapterNode::executeBottleRoutine()
         return;
     }
 
-    rclcpp::sleep_for(1s);
+    executeGripperTarget("close");
 
     if (!executeNamedTarget("pose2"))
     {
@@ -143,7 +196,7 @@ void MoveItAdapterNode::executeBottleRoutine()
         return;
     }
 
-    rclcpp::sleep_for(1s);
+    executeGripperTarget("open");
 
     executeNamedTarget("home");
 
@@ -185,29 +238,15 @@ void MoveItAdapterNode::detectedObjectCallback(
 
     const std::string object_name = msg->class_name;
 
-    if (object_name == last_processed_object_)
+    if (
+        object_name != "cup" &&
+        object_name != "bottle"
+    )
     {
         return;
     }
 
-    last_processed_object_ = object_name;
-
     robot_busy_ = true;
 
-    RCLCPP_INFO(
-        get_logger(),
-        "Detected object: %s",
-        object_name.c_str()
-    );
-
-    if (!dispatchObject(object_name))
-    {
-        RCLCPP_WARN(
-            get_logger(),
-            "No routine implemented for '%s'.",
-            object_name.c_str()
-        );
-
-        robot_busy_ = false;
-    }
+    dispatchObject(object_name);
 }
