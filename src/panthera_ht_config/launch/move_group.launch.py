@@ -12,17 +12,28 @@ def launch_setup(context, *args, **kwargs):
 
     # Build MoveIt configuration with HARDWARE-SPECIFIC files
     moveit_config = (
-        MoveItConfigsBuilder("panthera_ht_ros_description", package_name="panthera_ht_config")
-        .robot_description_semantic(file_path=os.path.join(
-            panthera_config_path.perform(context),
-            "config",
-            "panthera_ht_ros_description_hardware.srdf"  # 硬件专用 SRDF
-        ))
-        .trajectory_execution(file_path=os.path.join(
-            panthera_config_path.perform(context),
-            "config",
-            "moveit_controllers_hardware.yaml"  # 硬件专用 controllers
-        ))
+        MoveItConfigsBuilder(
+            "panthera_ht_ros_description",
+            package_name="panthera_ht_config"
+        )
+        .robot_description_semantic(
+            file_path=os.path.join(
+                panthera_config_path.perform(context),
+                "config",
+                "panthera_ht_ros_description_sim.srdf"
+            )
+        )
+        .trajectory_execution(
+            file_path=os.path.join(
+                panthera_config_path.perform(context),
+                "config",
+                "moveit_controllers_sim.yaml"
+            )
+        )
+#        .planning_scene_monitor(
+#            publish_robot_description=True,
+#            publish_robot_description_semantic=True,
+#        )
         .to_moveit_configs()
     )
 
@@ -33,8 +44,15 @@ def launch_setup(context, *args, **kwargs):
         output="screen",
         parameters=[
             moveit_config.to_dict(),
-            {'use_sim_time': False},  # 真实硬件使用系统时间
-        ],
+
+            {
+                'use_sim_time': use_sim_time,
+
+                'publish_robot_description': True,
+
+                'publish_robot_description_semantic': True,
+            },
+        ]
     )
 
     return [move_group_node]

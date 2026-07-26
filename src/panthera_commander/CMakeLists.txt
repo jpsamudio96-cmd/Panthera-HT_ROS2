@@ -16,6 +16,18 @@ find_package(panthera_interfaces REQUIRED)
 add_executable(test_moveit src/test_moveit.cpp)
 ament_target_dependencies(test_moveit rclcpp moveit_ros_planning_interface example_interfaces)
 
+add_executable(test_moveit_pose
+    src/test_moveit_pose.cpp
+)
+
+ament_target_dependencies(
+    test_moveit_pose
+    rclcpp
+    moveit_ros_planning_interface
+    example_interfaces
+    panthera_interfaces
+)
+
 add_executable(test_moveit_by_cartesian src/test_moveit_by_cartesian.cpp)
 ament_target_dependencies(test_moveit_by_cartesian rclcpp moveit_ros_planning_interface example_interfaces)
 
@@ -55,6 +67,7 @@ add_executable(sin_trajectory_moveit src/sin_trajectory_moveit.cpp)
 ament_target_dependencies(sin_trajectory_moveit rclcpp moveit_ros_planning_interface)
 
 install(TARGETS
+  test_moveit_pose
   test_moveit
   test_moveit_by_cartesian
   test_moveit_by_jointspace

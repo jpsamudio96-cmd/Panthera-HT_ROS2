@@ -1,4 +1,5 @@
 #include <memory>
+#include <thread>
 
 #include <rclcpp/rclcpp.hpp>
 
@@ -12,9 +13,34 @@ int main(
     rclcpp::init(argc, argv);
 
     auto node =
-        std::make_shared<MoveItAdapterNode>();
+        rclcpp::Node::make_shared(
+            "panthera_moveit_adapter"
+        );
+        
+    node->set_parameter(
+        rclcpp::Parameter(
+            "use_sim_time",
+            true
+        )
+        );
 
-    rclcpp::spin(node);
+    rclcpp::executors::SingleThreadedExecutor executor;
+
+    executor.add_node(node);
+
+    std::thread spinner(
+        [&executor]()
+        {
+            executor.spin();
+        }
+    );
+
+    auto adapter =
+        std::make_shared<MoveItAdapter>(node);
+
+    adapter->initializeMoveGroup();
+
+    spinner.join();
 
     rclcpp::shutdown();
 

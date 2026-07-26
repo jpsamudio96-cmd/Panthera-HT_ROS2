@@ -16,19 +16,47 @@ def launch_setup(context, *args, **kwargs):
 
     # Build MoveIt configuration with SIMULATION-SPECIFIC files
     moveit_config = (
-        MoveItConfigsBuilder("panthera_ht_ros_description", package_name="panthera_ht_config")
-        .robot_description_semantic(file_path=os.path.join(
-            panthera_config_path.perform(context),
-            "config",
-            "panthera_ht_ros_description_sim.srdf"  # 仿真专用 SRDF
-        ))
-        .trajectory_execution(file_path=os.path.join(
-            panthera_config_path.perform(context),
-            "config",
-            "moveit_controllers_sim.yaml"  # 仿真专用 controllers
-        ))
+        MoveItConfigsBuilder(
+            "panthera_ht_ros_description",
+            package_name="panthera_ht_config"
+        )
+        .robot_description_semantic(
+            file_path=os.path.join(
+                panthera_config_path.perform(context),
+                "config",
+                "panthera_ht_ros_description_sim.srdf"
+            )
+        )
+
+        .robot_description_kinematics(
+            file_path=os.path.join(
+                panthera_config_path.perform(context),
+                "config",
+                "kinematics.yaml"
+            )
+        )
+
+        .trajectory_execution(
+            file_path=os.path.join(
+                panthera_config_path.perform(context),
+                "config",
+                "moveit_controllers_sim.yaml"
+            )
+        )
+#        .planning_scene_monitor(
+#            publish_robot_description=True,
+#            publish_robot_description_semantic=True,
+#        )
         .to_moveit_configs()
     )
+
+    config = moveit_config.to_dict()
+
+    print("=" * 80)
+    print(config.keys())
+    print("=" * 80)
+    print(config.get("robot_description_kinematics"))
+    print("=" * 80)
 
     # Move group node with explicit use_sim_time parameter
     move_group_node = Node(
@@ -37,8 +65,15 @@ def launch_setup(context, *args, **kwargs):
         output="screen",
         parameters=[
             moveit_config.to_dict(),
-            {'use_sim_time': use_sim_time},
-        ],
+
+            {
+                'use_sim_time': use_sim_time,
+
+                'publish_robot_description': True,
+
+                'publish_robot_description_semantic': True,
+            },
+        ]
     )
 
     return [move_group_node]
