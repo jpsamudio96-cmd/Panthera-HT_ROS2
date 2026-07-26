@@ -37,8 +37,8 @@ void MoveItAdapterNode::initializeMoveIt()
         "arm"
     );
 
-    arm_->setMaxVelocityScalingFactor(0.3);
-    arm_->setMaxAccelerationScalingFactor(0.3);
+    arm_->setMaxVelocityScalingFactor(0.30);
+    arm_->setMaxAccelerationScalingFactor(0.30);
 
     RCLCPP_INFO(
         get_logger(),
@@ -48,10 +48,58 @@ void MoveItAdapterNode::initializeMoveIt()
 
 void MoveItAdapterNode::executeCupRoutine()
 {
+    if (!arm_)
+    {
+        RCLCPP_ERROR(
+            get_logger(),
+            "MoveGroupInterface not initialized."
+        );
+        return;
+    }
+
     RCLCPP_INFO(
         get_logger(),
-        "Cup routine not implemented yet."
+        "Planning to named target: pose1"
     );
+
+    arm_->setStartStateToCurrentState();
+
+    arm_->setNamedTarget("pose1");
+
+    MoveGroupInterface::Plan plan;
+
+    auto result = arm_->plan(plan);
+
+    if (result != moveit::core::MoveItErrorCode::SUCCESS)
+    {
+        RCLCPP_ERROR(
+            get_logger(),
+            "Planning failed."
+        );
+        return;
+    }
+
+    RCLCPP_INFO(
+        get_logger(),
+        "Planning succeeded."
+    );
+
+    result = arm_->execute(plan);
+
+    if (result == moveit::core::MoveItErrorCode::SUCCESS)
+    {
+        RCLCPP_INFO(
+            get_logger(),
+            "Execution completed."
+        );
+    }
+    else
+    {
+        RCLCPP_ERROR(
+            get_logger(),
+            "Execution failed."
+        );
+    }
 }
 
 void MoveItAdapterNode::detectedObjectCallback(
@@ -68,18 +116,19 @@ void MoveItAdapterNode::detectedObjectCallback(
         return;
     }
 
+    if (msg->class_name != "cup")
+    {
+        return;
+    }
+
     robot_busy_ = true;
 
     RCLCPP_INFO(
         get_logger(),
-        "Detected: %s",
-        msg->class_name.c_str()
+        "Detected cup."
     );
 
-    if (msg->class_name == "cup")
-    {
-        executeCupRoutine();
-    }
+    executeCupRoutine();
 
     robot_busy_ = false;
 }
