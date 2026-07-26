@@ -20,14 +20,24 @@ include_directories(
   include
 )
 
+set(PANTHERA_MOVEIT_ADAPTER_HEADERS
+    include/panthera_moveit_adapter/moveit_adapter_node.hpp
+    include/panthera_moveit_adapter/state_machine.hpp
+    include/panthera_moveit_adapter/trajectory_library.hpp
+)
+
+set(PANTHERA_MOVEIT_ADAPTER_SOURCES
+    src/main.cpp
+    src/moveit_adapter_node.cpp
+)
+
 # =========================
 # Executable
 # =========================
 
 add_executable(
-  moveit_adapter_node
-  src/main.cpp
-  src/moveit_adapter_node.cpp
+    moveit_adapter_node
+    ${PANTHERA_MOVEIT_ADAPTER_SOURCES}
 )
 
 ament_target_dependencies(
