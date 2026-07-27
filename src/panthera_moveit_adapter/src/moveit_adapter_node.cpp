@@ -160,20 +160,32 @@ bool MoveItAdapterNode::executeGripperTarget(
         return false;
     }
 
+    RCLCPP_INFO(
+        get_logger(),
+        "Gripper target '%s' completed.",
+        target_name.c_str()
+    );
+
     return true;
 }
 
 void MoveItAdapterNode::executeCupRoutine()
 {
+    executeGripperTarget("open");
+
+    rclcpp::sleep_for(500ms);
+
     if (!executeNamedTarget("pose1"))
     {
         robot_busy_ = false;
         return;
     }
 
-    rclcpp::sleep_for(1s);
+    rclcpp::sleep_for(500ms);
 
-    executeGripperTarget("open");
+    executeGripperTarget("half_open");
+
+    rclcpp::sleep_for(500ms);
 
     executeNamedTarget("home");
 
@@ -182,13 +194,21 @@ void MoveItAdapterNode::executeCupRoutine()
 
 void MoveItAdapterNode::executeBottleRoutine()
 {
+    executeGripperTarget("open");
+
+    rclcpp::sleep_for(500ms);
+
     if (!executeNamedTarget("pose1"))
     {
         robot_busy_ = false;
         return;
     }
 
+    rclcpp::sleep_for(500ms);
+
     executeGripperTarget("close");
+
+    rclcpp::sleep_for(500ms);
 
     if (!executeNamedTarget("pose2"))
     {
@@ -196,7 +216,11 @@ void MoveItAdapterNode::executeBottleRoutine()
         return;
     }
 
+    rclcpp::sleep_for(500ms);
+
     executeGripperTarget("open");
+
+    rclcpp::sleep_for(500ms);
 
     executeNamedTarget("home");
 
