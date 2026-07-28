@@ -146,73 +146,76 @@
     <!-- ================================================================= -->
 
     <model name="overhead_camera">
-        <static>true</static>
-        <!-- Centrada sobre la mesa -->
-        <pose>0.45 0.70 2.30 0 0 0</pose>
 
-        <link name="camera_link">
+      <static>true</static>
 
-            <!-- Camera body -->
-            <visual name="camera_body">
+      <!-- Centered above the work table -->
+      <pose>0.45 0.70 2.30 0 0 0</pose>
 
-            <geometry>
-                <box>
-                <size>0.12 0.08 0.06</size>
-                </box>
-            </geometry>
+      <link name="camera_link">
 
-            <material>
-                <ambient>0.08 0.08 0.08 1</ambient>
-                <diffuse>0.15 0.15 0.15 1</diffuse>
-            </material>
+        <!-- Camera housing -->
+        <visual name="camera_body">
 
-            </visual>
+          <geometry>
+            <box>
+              <size>0.12 0.08 0.06</size>
+            </box>
+          </geometry>
 
-            <!-- Camera sensor -->
-            <sensor name="industrial_camera" type="camera">
+          <material>
+            <ambient>0.08 0.08 0.08 1</ambient>
+            <diffuse>0.15 0.15 0.15 1</diffuse>
+          </material>
 
-            <!-- Looking downward -->
-            <pose>0 0 -0.04 0 1.5708 0</pose>
+        </visual>
 
-            <always_on>true</always_on>
+        <!-- Downward-looking industrial camera -->
+        <sensor name="industrial_camera" type="camera">
 
-            <visualize>true</visualize>
+          <pose>0 0 -0.04 0 1.5708 0</pose>
 
-            <update_rate>30</update_rate>
+          <always_on>true</always_on>
 
-            <topic>camera/image_raw</topic>
+          <visualize>true</visualize>
 
-            <camera name="industrial_camera">
+          <update_rate>30</update_rate>
 
-                <camera_info_topic>camera/camera_info</camera_info_topic>
+          <camera>
 
-                <horizontal_fov>1.40</horizontal_fov>
+            <horizontal_fov>1.40</horizontal_fov>
 
-                <image>
+            <image>
+              <width>640</width>
+              <height>480</height>
+              <format>R8G8B8</format>
+            </image>
 
-                <width>640</width>
+            <clip>
+              <near>0.05</near>
+              <far>10.0</far>
+            </clip>
 
-                <height>480</height>
+          </camera>
 
-                <format>R8G8B8</format>
+          <plugin
+              name="camera_controller"
+              filename="libgazebo_ros_camera.so">
 
-                </image>
+            <ros>
 
-                <clip>
+              <remapping>image_raw:=camera/image_raw</remapping>
+              <remapping>camera_info:=camera/camera_info</remapping>
 
-                <near>0.05</near>
+            </ros>
 
-                <far>10.0</far>
+          </plugin>
 
-                </clip>
+        </sensor>
 
-            </camera>
+      </link>
 
-            </sensor>
-
-        </link>
-
-        </model>
+    </model>
 
   </world>
 </sdf>
