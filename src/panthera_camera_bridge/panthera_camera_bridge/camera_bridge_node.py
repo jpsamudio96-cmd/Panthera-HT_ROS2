@@ -8,6 +8,7 @@ from sensor_msgs.msg import Image
 from panthera_camera_bridge.image_encoder import ImageEncoder
 
 from panthera_camera_bridge.tcp_server import TCPServer
+from panthera_camera_bridge.pcbp import PCBP
 
 class CameraBridgeNode(Node):
 
@@ -24,6 +25,8 @@ class CameraBridgeNode(Node):
 
         self.server.start()
         self.server.start_accept_thread()
+
+        self.protocol = PCBP()
 
         self.subscription = self.create_subscription(
             Image,
@@ -60,10 +63,14 @@ class CameraBridgeNode(Node):
             # Solo intentar enviar si existe un cliente conectado
             if self.server.client_socket is not None:
 
-                if self.server.send(b"Panthera Camera Bridge"):
+                payload = jpeg
+
+                packet = self.protocol.build_packet(payload)
+
+                if self.server.send(packet):
 
                     self.get_logger().info(
-                        "Test message sent"
+                        "Test packet sent"
                     )
 
                 else:
