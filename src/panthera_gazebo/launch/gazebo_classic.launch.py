@@ -51,7 +51,9 @@ def generate_launch_description():
     )
 
     world_file = PathJoinSubstitution([
-        gripper_gazebo_path, 'worlds', 'empty.world'
+        gripper_gazebo_path,
+        'worlds',
+        'panthera_pick_place.world'
     ])
 
     gazebo = IncludeLaunchDescription(

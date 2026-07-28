@@ -1,0 +1,218 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+  <world name="panthera_pick_place">
+
+    <!-- ================================================================= -->
+    <!-- Environment -->
+    <!-- ================================================================= -->
+
+    <!-- Sun -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- Ground -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- ================================================================= -->
+    <!-- Physics -->
+    <!-- ================================================================= -->
+
+    <physics name="default_physics" default="0" type="ode">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+
+    <!-- ================================================================= -->
+    <!-- Scene -->
+    <!-- ================================================================= -->
+
+    <scene>
+      <ambient>0.4 0.4 0.4 1</ambient>
+      <background>0.7 0.7 0.7 1</background>
+      <shadows>1</shadows>
+    </scene>
+
+    <!-- ================================================================= -->
+    <!-- GUI -->
+    <!-- ================================================================= -->
+
+    <gui fullscreen="0">
+      <camera name="user_camera">
+        <pose>2.0 -2.0 1.2 0 0.275643 2.356</pose>
+        <view_controller>orbit</view_controller>
+      </camera>
+    </gui>
+
+    <!-- ================================================================= -->
+    <!-- Robot -->
+    <!-- Spawned dynamically by gazebo_classic.launch.py -->
+    <!-- ================================================================= -->
+
+    <!-- ================================================================= -->
+    <!-- Workcell -->
+    <!-- ================================================================= -->
+    <model name="panthera_work_table">
+        <static>true</static>
+
+        <pose>0.45 0.70 0.0 0 0 0</pose>
+
+        <link name="table_link">
+
+            <!-- Tablero -->
+            <collision name="table_top_collision">
+            <pose>0 0 0.74 0 0 0</pose>
+            <geometry>
+                <box>
+                <size>1.60 1.00 0.08</size>
+                </box>
+            </geometry>
+            </collision>
+
+            <visual name="table_top_visual">
+            <pose>0 0 0.74 0 0 0</pose>
+            <geometry>
+                <box>
+                <size>1.60 1.00 0.08</size>
+                </box>
+            </geometry>
+
+            <material>
+                <ambient>0.65 0.65 0.68 1</ambient>
+                <diffuse>0.75 0.75 0.78 1</diffuse>
+            </material>
+            </visual>
+
+            <!-- Patas -->
+            <visual name="leg_1">
+            <pose>0.68 0.38 0.35 0 0 0</pose>
+            <geometry>
+            <box>
+            <size>0.08 0.08 0.70</size>
+            </box>
+            </geometry>
+            <material>
+            <ambient>0.20 0.20 0.22 1</ambient>
+            <diffuse>0.30 0.30 0.32 1</diffuse>
+            </material>
+            </visual>
+            
+                    <visual name="leg_2">
+            <pose>0.68 -0.38 0.35 0 0 0</pose>
+            <geometry>
+            <box>
+            <size>0.08 0.08 0.70</size>
+            </box>
+            </geometry>
+            <material>
+            <ambient>0.20 0.20 0.22 1</ambient>
+            <diffuse>0.30 0.30 0.32 1</diffuse>
+            </material>
+            </visual>
+            
+                    <visual name="leg_3">
+            <pose>-0.68 0.38 0.35 0 0 0</pose>
+            <geometry>
+            <box>
+            <size>0.08 0.08 0.70</size>
+            </box>
+            </geometry>
+            <material>
+            <ambient>0.20 0.20 0.22 1</ambient>
+            <diffuse>0.30 0.30 0.32 1</diffuse>
+            </material>
+            </visual>
+            
+                    <visual name="leg_4">
+            <pose>-0.68 -0.38 0.35 0 0 0</pose>
+            <geometry>
+            <box>
+            <size>0.08 0.08 0.70</size>
+            </box>
+            </geometry>
+            <material>
+            <ambient>0.20 0.20 0.22 1</ambient>
+            <diffuse>0.30 0.30 0.32 1</diffuse>
+            </material>
+            </visual>
+        </link>
+        </model>
+
+    <!-- ================================================================= -->
+    <!-- Overhead Camera -->
+    <!-- ================================================================= -->
+
+    <model name="overhead_camera">
+        <static>true</static>
+        <!-- Centrada sobre la mesa -->
+        <pose>0.45 0.70 2.30 0 0 0</pose>
+
+        <link name="camera_link">
+
+            <!-- Camera body -->
+            <visual name="camera_body">
+
+            <geometry>
+                <box>
+                <size>0.12 0.08 0.06</size>
+                </box>
+            </geometry>
+
+            <material>
+                <ambient>0.08 0.08 0.08 1</ambient>
+                <diffuse>0.15 0.15 0.15 1</diffuse>
+            </material>
+
+            </visual>
+
+            <!-- Camera sensor -->
+            <sensor name="industrial_camera" type="camera">
+
+            <!-- Looking downward -->
+            <pose>0 0 -0.04 0 1.5708 0</pose>
+
+            <always_on>true</always_on>
+
+            <visualize>true</visualize>
+
+            <update_rate>30</update_rate>
+
+            <topic>camera/image_raw</topic>
+
+            <camera name="industrial_camera">
+
+                <camera_info_topic>camera/camera_info</camera_info_topic>
+
+                <horizontal_fov>1.40</horizontal_fov>
+
+                <image>
+
+                <width>640</width>
+
+                <height>480</height>
+
+                <format>R8G8B8</format>
+
+                </image>
+
+                <clip>
+
+                <near>0.05</near>
+
+                <far>10.0</far>
+
+                </clip>
+
+            </camera>
+
+            </sensor>
+
+        </link>
+
+        </model>
+
+  </world>
+</sdf>
