@@ -79,7 +79,9 @@ def generate_launch_description():
                 arguments=[
                     '-topic', 'robot_description',
                     '-entity', 'panthera_with_gripper',
-                    '-z', '0.0'
+                    '-x', '-0.55',
+                    '-y', '0.35',
+                    '-z', '0.78'
                 ],
                 output='screen'
             )
