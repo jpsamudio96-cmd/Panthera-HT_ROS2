@@ -49,4 +49,28 @@ class StateMachine:
                         BehaviorState.OBJECT_READY
                     )
 
+            case BehaviorState.OBJECT_READY:
+
+                context.processed = True
+
+                return self.transition_to(
+                    BehaviorState.EXECUTING
+                )
+
+            case BehaviorState.EXECUTING:
+
+                return self.transition_to(
+                    BehaviorState.RETURNING_HOME
+                )
+
+            case BehaviorState.RETURNING_HOME:
+
+                context.valid = False
+                context.processed = False
+                context.detection = None
+
+                return self.transition_to(
+                    BehaviorState.IDLE
+                )
+
         return False

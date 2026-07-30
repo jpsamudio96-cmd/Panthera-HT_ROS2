@@ -80,6 +80,8 @@ class BehaviorNode(Node):
 
     def timer_callback(self):
 
+        self.get_logger().info(
+
         transition = self.state_machine.tick(
             self.detection_context
         )
