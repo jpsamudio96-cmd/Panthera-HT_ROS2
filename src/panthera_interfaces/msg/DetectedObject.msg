@@ -1,6 +1,14 @@
 std_msgs/Header header
 
+# YOLO classification
 string class_name
+
+# Panthera semantic classification
+string panthera_class
+
+# Features extracted by GeometryProcessor
+string shape
+string color
 
 float32 confidence
 

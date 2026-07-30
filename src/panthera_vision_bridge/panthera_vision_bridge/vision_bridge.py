@@ -308,13 +308,6 @@ class VisionBridge(Node):
 
         return True
 
-
- # JSON
-    # Parsear el paquete JSON
-    def parse_packet(self, message):
-
-        return json.loads(message)
-
     # Imprime paquete recibido
     def print_packet(self, packet):
 
@@ -385,7 +378,29 @@ class VisionBridge(Node):
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = detection["frame_id"]
 
+        # YOLO classification
         msg.class_name = detection["class_name"]
+
+        # Panthera classification
+        msg.panthera_class = detection.get(
+            "panthera_class",
+            ""
+        )
+
+        # Extracted features
+        msg.shape = detection.get(
+            "shape",
+            ""
+        )
+
+        msg.color = detection.get(
+            "color",
+            ""
+        )
+
+        msg.confidence = float(
+            detection["confidence"]
+        )
 
         msg.confidence = float(
             detection["confidence"]
