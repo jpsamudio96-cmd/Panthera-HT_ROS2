@@ -28,6 +28,10 @@ class StateMachine:
 
         return self._state
 
+    def set_state(self, new_state: BehaviorState):
+
+        self._state = new_state
+
     def transition_to(self, new_state: BehaviorState) -> bool:
 
         if new_state == self._state:
@@ -53,15 +57,11 @@ class StateMachine:
 
                 context.processed = True
 
-                return self.transition_to(
-                    BehaviorState.EXECUTING
-                )
+                return False
 
             case BehaviorState.EXECUTING:
 
-                return self.transition_to(
-                    BehaviorState.RETURNING_HOME
-                )
+                return False
 
             case BehaviorState.RETURNING_HOME:
 

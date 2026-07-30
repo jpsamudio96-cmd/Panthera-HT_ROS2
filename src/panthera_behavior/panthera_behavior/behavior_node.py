@@ -10,6 +10,12 @@ from panthera_behavior.detection_context import DetectionContext
 from panthera_behavior.state_machine import StateMachine
 from panthera_behavior.detection_validator import DetectionValidator
 
+from panthera_motion.mock_motion_executor import MockMotionExecutor
+from panthera_motion.motion_request import MotionRequest, MotionCommand
+
+from panthera_motion.motion_result import MotionStatus
+from panthera_behavior.state_machine import BehaviorState
+
 class BehaviorNode(Node):
 
     def __init__(self):
@@ -19,6 +25,8 @@ class BehaviorNode(Node):
         self.detection_context = DetectionContext()
 
         self.validator = DetectionValidator()
+
+        self.motion_executor = MockMotionExecutor()
 
         self.state_machine = StateMachine(
             self.validator
@@ -78,9 +86,29 @@ class BehaviorNode(Node):
             "========================================="
         )
 
-    def timer_callback(self):
+    def execute_motion(
+        self,
+        command: MotionCommand,
+        next_state: BehaviorState
+    ):
+
+        request = MotionRequest(command)
+
+        result = self.motion_executor.execute(request)
 
         self.get_logger().info(
+            f"Motion -> {result.status.name}"
+        )
+
+        if result.status == MotionStatus.SUCCESS:
+
+            self.state_machine.set_state(next_state)
+
+            self.get_logger().info(
+                f"State -> {self.state_machine.state.name}"
+            )
+
+    def timer_callback(self):
 
         transition = self.state_machine.tick(
             self.detection_context
@@ -90,6 +118,20 @@ class BehaviorNode(Node):
 
             self.get_logger().info(
                 f"State -> {self.state_machine.state.name}"
+            )
+
+        if self.state_machine.state == BehaviorState.OBJECT_READY:
+
+            self.execute_motion(
+                MotionCommand.EXECUTE_APPROACH,
+                BehaviorState.EXECUTING
+            )
+
+        elif self.state_machine.state == BehaviorState.EXECUTING:
+
+            self.execute_motion(
+                MotionCommand.GO_HOME,
+                BehaviorState.RETURNING_HOME
             )
 
 
