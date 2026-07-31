@@ -1,12 +1,21 @@
+from enum import Enum
 from dataclasses import dataclass
-from enum import Enum, auto
 
 
 class MotionCommand(Enum):
-    GO_HOME = auto()
-    EXECUTE_APPROACH = auto()
+
+    GO_HOME = 1
+
+    GO_POSE1 = 2
+
+    GO_POSE2 = 3
+
+    GRIPPER_OPEN = 4
+
+    GRIPPER_CLOSE = 5
 
 
 @dataclass
 class MotionRequest:
+
     command: MotionCommand

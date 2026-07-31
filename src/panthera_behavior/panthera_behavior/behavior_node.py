@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import rclpy
+import time
 
 from rclpy.node import Node
 
@@ -15,6 +16,8 @@ from panthera_motion.motion_request import MotionRequest, MotionCommand
 
 from panthera_motion.motion_result import MotionStatus
 from panthera_behavior.state_machine import BehaviorState
+
+from rclpy.executors import MultiThreadedExecutor
 
 class BehaviorNode(Node):
 
@@ -108,6 +111,54 @@ class BehaviorNode(Node):
                 f"State -> {self.state_machine.state.name}"
             )
 
+
+    def execute_routine(
+        self,
+        target_pose: MotionCommand
+    ) -> bool:
+
+        self.get_logger().info(
+            f"Executing routine -> {target_pose.name}"
+        )
+
+        sequence = [
+
+            MotionCommand.GO_HOME,
+
+            MotionCommand.GRIPPER_OPEN,
+
+            target_pose,
+
+            MotionCommand.GRIPPER_CLOSE,
+
+            MotionCommand.GO_HOME,
+
+        ]
+
+        for command in sequence:
+
+            result = self.motion_executor.execute(
+                MotionRequest(command)
+            )
+
+            self.get_logger().info(
+                f"{command.name} -> {result.status.name}"
+            )
+
+            if result.status != MotionStatus.SUCCESS:
+
+                self.get_logger().error(
+                    f"Routine aborted on {command.name}"
+                )
+
+                return False
+
+            # Dar tiempo a que MoveIt termine antes de enviar
+            # el siguiente comando
+            time.sleep(3.0)
+
+        return True
+
     def timer_callback(self):
 
         transition = self.state_machine.tick(
@@ -122,17 +173,37 @@ class BehaviorNode(Node):
 
         if self.state_machine.state == BehaviorState.OBJECT_READY:
 
-            self.execute_motion(
-                MotionCommand.EXECUTE_APPROACH,
-                BehaviorState.EXECUTING
-            )
+            detection = self.detection_context.detection
 
-        elif self.state_machine.state == BehaviorState.EXECUTING:
+            if detection.color == "red":
 
-            self.execute_motion(
-                MotionCommand.GO_HOME,
-                BehaviorState.RETURNING_HOME
-            )
+                success = self.execute_routine(
+                    MotionCommand.GO_POSE1
+                )
+
+            elif detection.color == "green":
+
+                success = self.execute_routine(
+                    MotionCommand.GO_POSE2
+                )
+
+            else:
+
+                self.get_logger().warning(
+                    f"Unsupported color: {detection.color}"
+                )
+
+                return
+
+            if success:
+
+                self.state_machine.set_state(
+                    BehaviorState.RETURNING_HOME
+                )
+
+                self.get_logger().info(
+                    f"State -> {self.state_machine.state.name}"
+                )
 
 
 def main():
@@ -141,11 +212,21 @@ def main():
 
     node = BehaviorNode()
 
-    rclpy.spin(node)
+    executor = MultiThreadedExecutor()
 
-    node.destroy_node()
+    executor.add_node(node)
 
-    rclpy.shutdown()
+    try:
+
+        executor.spin()
+
+    finally:
+
+        executor.shutdown()
+
+        node.destroy_node()
+
+        rclpy.shutdown()
 
 
 if __name__ == "__main__":

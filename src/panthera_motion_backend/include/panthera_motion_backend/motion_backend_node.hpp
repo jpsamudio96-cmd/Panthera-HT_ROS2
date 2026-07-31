@@ -31,6 +31,10 @@ private:
         const std::string& target_name
     );
 
+    bool executeGripperTarget(
+        const std::string& target_name
+    );
+
     std::shared_ptr<MoveGroupInterface> arm_;
     std::shared_ptr<MoveGroupInterface> gripper_;
 

@@ -71,6 +71,13 @@ bool MotionBackendNode::executeNamedTarget(
     const std::string& target_name
 )
 {
+
+    RCLCPP_INFO(
+        get_logger(),
+        "TARGET NAME: %s",
+        target_name.c_str()
+    );
+
     if (!arm_)
     {
         RCLCPP_ERROR(
@@ -179,6 +186,12 @@ void MotionBackendNode::execute(
 
     const auto goal = goal_handle->get_goal();
 
+    RCLCPP_INFO(
+        get_logger(),
+        "EXECUTE COMMAND: %s",
+        goal->command.c_str()
+    );
+
     auto feedback =
         std::make_shared<ExecuteMotion::Feedback>();
 
@@ -191,10 +204,23 @@ void MotionBackendNode::execute(
     if (goal->command == "GO_HOME")
     {
         success = executeNamedTarget("home");
+        //success = executeNamedTarget("pose1");
     }
-    else if (goal->command == "EXECUTE_APPROACH")
+    else if (goal->command == "GO_POSE1")
     {
         success = executeNamedTarget("pose1");
+    }
+    else if (goal->command == "GO_POSE2")
+    {
+        success = executeNamedTarget("pose2");
+    }
+    else if (goal->command == "GRIPPER_OPEN")
+    {
+        success = executeGripperTarget("open");
+    }
+    else if (goal->command == "GRIPPER_CLOSE")
+    {
+        success = executeGripperTarget("close");
     }
     else
     {
@@ -224,4 +250,56 @@ void MotionBackendNode::execute(
 
         goal_handle->abort(result);
     }
+}
+
+bool MotionBackendNode::executeGripperTarget(
+    const std::string& target_name
+)
+{
+    if (!gripper_)
+    {
+        RCLCPP_ERROR(
+            get_logger(),
+            "Gripper MoveGroupInterface not initialized."
+        );
+        return false;
+    }
+
+    gripper_->setStartStateToCurrentState();
+
+    gripper_->setNamedTarget(target_name);
+
+    MoveGroupInterface::Plan plan;
+
+    auto result = gripper_->plan(plan);
+
+    if (result != moveit::core::MoveItErrorCode::SUCCESS)
+    {
+        RCLCPP_ERROR(
+            get_logger(),
+            "Gripper planning failed for '%s'.",
+            target_name.c_str()
+        );
+        return false;
+    }
+
+    result = gripper_->execute(plan);
+
+    if (result != moveit::core::MoveItErrorCode::SUCCESS)
+    {
+        RCLCPP_ERROR(
+            get_logger(),
+            "Gripper execution failed for '%s'.",
+            target_name.c_str()
+        );
+        return false;
+    }
+
+    RCLCPP_INFO(
+        get_logger(),
+        "Gripper target '%s' completed.",
+        target_name.c_str()
+    );
+
+    return true;
 }
