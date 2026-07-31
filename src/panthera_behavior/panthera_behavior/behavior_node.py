@@ -10,7 +10,7 @@ from panthera_behavior.detection_context import DetectionContext
 from panthera_behavior.state_machine import StateMachine
 from panthera_behavior.detection_validator import DetectionValidator
 
-from panthera_motion.mock_motion_executor import MockMotionExecutor
+from panthera_motion.moveit_motion_executor import MoveItMotionExecutor
 from panthera_motion.motion_request import MotionRequest, MotionCommand
 
 from panthera_motion.motion_result import MotionStatus
@@ -26,7 +26,7 @@ class BehaviorNode(Node):
 
         self.validator = DetectionValidator()
 
-        self.motion_executor = MockMotionExecutor()
+        self.motion_executor = MoveItMotionExecutor(self)
 
         self.state_machine = StateMachine(
             self.validator

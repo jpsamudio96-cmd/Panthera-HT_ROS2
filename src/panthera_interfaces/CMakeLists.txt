@@ -23,6 +23,9 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   "srv/Enable.srv"
   "srv/GoZero.srv"
   "srv/GripperSrv.srv"
+
+  "action/ExecuteMotion.action"
+
   DEPENDENCIES std_msgs
 )
 
